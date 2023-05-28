@@ -54,6 +54,7 @@ defmodule TypedEctoSchemaTest do
         field(:string)
         field(:non_nullable_string, :string, null: false)
         field(:enforced_int, :integer, enforce: true)
+        field(:documented_string, :string, doc: "a string describing the field")
         field(:overriden_type, :integer) :: 1 | 2 | 3
         field(:overriden_string) :: any()
         field(:enum_type1, Ecto.Enum, values: [:foo1])
@@ -174,6 +175,7 @@ defmodule TypedEctoSchemaTest do
              :string,
              :non_nullable_string,
              :enforced_int,
+             :documented_string,
              :overriden_type,
              :overriden_string,
              :enum_type1,
@@ -250,6 +252,7 @@ defmodule TypedEctoSchemaTest do
           field(:string)
           field(:non_nullable_string, :string, default: "default")
           field(:enforced_int, :integer)
+          field(:documented_string, :string)
           field(:overriden_type, :integer)
           field(:overriden_string)
           field(:enum_type1, Ecto.Enum, values: [:foo1])
@@ -273,6 +276,7 @@ defmodule TypedEctoSchemaTest do
                 string: String.t() | nil,
                 non_nullable_string: String.t(),
                 enforced_int: integer() | nil,
+                documented_string: unquote(String).t() | nil,
                 overriden_type: 1 | 2 | 3,
                 overriden_string: any(),
                 enum_type1: :foo1 | nil,
@@ -340,6 +344,7 @@ defmodule TypedEctoSchemaTest do
           string: unquote(String).t() | nil,
           non_nullable_string: unquote(String).t(),
           enforced_int: integer() | nil,
+          documented_string: unquote(String).t() | nil,
           overriden_type: 1 | 2 | 3,
           overriden_string: any(),
           enum_type1: :foo1 | nil,

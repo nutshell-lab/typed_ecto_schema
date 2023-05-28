@@ -229,6 +229,7 @@ defmodule TypedEctoSchema do
       unquote(TypeBuilder).add_primary_key(__MODULE__)
       unquote(SyntaxSugar.apply_to_block(block, env))
       unquote(TypeBuilder).enforce_keys()
+      unquote(TypeBuilder).build_documentation()
     end
   end
 

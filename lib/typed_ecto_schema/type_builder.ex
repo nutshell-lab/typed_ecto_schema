@@ -16,6 +16,7 @@ defmodule TypedEctoSchema.TypeBuilder do
            {:null, boolean()}
            | {:enforce, boolean()}
            | {:opaque, boolean()}
+           | {:doc, String.t()}
 
   @type schema_options :: list(schema_option)
 
@@ -23,7 +24,7 @@ defmodule TypedEctoSchema.TypeBuilder do
 
   @type field_options :: list(field_option)
 
-  @default_schema_opts null: true, enforce: false, opaque: false
+  @default_schema_opts null: true, enforce: false, opaque: false, doc: nil
 
   defmacro init(schema_opts) do
     schema_opts = Keyword.merge(@default_schema_opts, schema_opts)
@@ -41,6 +42,12 @@ defmodule TypedEctoSchema.TypeBuilder do
         accumulate: true
       )
 
+      Module.register_attribute(
+        __MODULE__,
+        :__typed_ecto_schema_keys_documentation__,
+        accumulate: true
+      )
+
       Module.put_attribute(
         __MODULE__,
         :__typed_ecto_schema_module_opts__,
@@ -52,6 +59,25 @@ defmodule TypedEctoSchema.TypeBuilder do
   defmacro enforce_keys do
     quote do
       @enforce_keys @__typed_ecto_schema_enforced_keys__
+    end
+  end
+
+  defmacro build_documentation() do
+    quote do
+      current_mdoc = @moduledoc
+
+      case @__typed_ecto_schema_keys_documentation__ do
+        [] ->
+          :no_documentation
+
+        keys_documentation ->
+          @moduledoc """
+          #{current_mdoc}
+
+          ### Schema fields :
+          #{keys_documentation |> Enum.map_join("\n\n", fn {key, doc} -> "* `#{key}` #{doc}" end)}
+          """
+      end
     end
   end
 
@@ -143,6 +169,14 @@ defmodule TypedEctoSchema.TypeBuilder do
     if field_is_enforced?(schema_opts, field_opts),
       do: Module.put_attribute(mod, :__typed_ecto_schema_enforced_keys__, name)
 
+    if field_is_documented?(schema_opts, field_opts),
+      do:
+        Module.put_attribute(
+          mod,
+          :__typed_ecto_schema_keys_documentation__,
+          {name, field_opts[:doc]}
+        )
+
     if function_name == :belongs_to and
          Keyword.get(field_opts, :define_field, true) do
       add_field(
@@ -168,5 +202,10 @@ defmodule TypedEctoSchema.TypeBuilder do
       :enforce,
       schema_opts[:enforce] && is_nil(field_opts[:default])
     )
+  end
+
+  @spec field_is_enforced?(schema_options(), field_options()) :: boolean()
+  defp field_is_documented?(schema_opts, field_opts) do
+    !is_nil(Keyword.get(field_opts, :doc))
   end
 end
